@@ -1,2 +1,1 @@
-# sample-gitops-repo
-Sample Git repo with ACM@UIUC GitOps rules built in
+# Exampe ACM@UIUC Python-based API using AWS Lambda/API Gateway
