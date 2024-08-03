@@ -144,7 +144,7 @@ Resources:
     DependsOn: 
       - AppApiLambdaFunction
     Properties:
-      Name: !Sub ${ApplicationPrefix}-api-gw
+      Name: !Sub ${ApplicationPrefix}-gateway
       Description: !Sub "${ApplicationFriendlyName} API Gateway"
       AlwaysDeploy: True
       DefinitionBody:
@@ -205,7 +205,7 @@ Resources:
     Type: 'AWS::CloudWatch::Alarm'
     Condition: IsProd
     Properties:
-      AlarmName: !Sub ${ApplicationPrefix}-api-gw-latency-high
+      AlarmName: !Sub ${ApplicationPrefix}-gateway-latency-high
       AlarmDescription: !Sub 'Alarm if ${ApplicationPrefix} API gateway latency is > 3s.'
       Namespace: 'AWS/ApiGateway'
       MetricName: 'Latency'
@@ -218,13 +218,13 @@ Resources:
         - !Ref AlertSNSArn
       Dimensions:
         - Name: 'ApiName'
-          Value: !Sub ${ApplicationPrefix}-api-gw
+          Value: !Sub ${ApplicationPrefix}-gateway
 
   AppApiGateway5XXErrorAlarm:
     Type: 'AWS::CloudWatch::Alarm'
     Condition: IsProd
     Properties:
-      AlarmName: !Sub ${ApplicationPrefix}-api-gw-5xx
+      AlarmName: !Sub ${ApplicationPrefix}-gateway-5xx
       AlarmDescription: !Sub 'Alarm if ${ApplicationPrefix} API gateway 5XX errors are detected.'
       Namespace: 'AWS/ApiGateway'
       MetricName: '5XXError'
@@ -237,7 +237,7 @@ Resources:
         - !Ref AlertSNSArn
       Dimensions:
         - Name: 'ApiName'
-          Value: !Sub ${ApplicationPrefix}-api-gw
+          Value: !Sub ${ApplicationPrefix}-gateway
 
   # LambdaAuthorizerPermission:
   #   Condition: AuthorizerFunctionEnabled
