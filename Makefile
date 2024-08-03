@@ -55,10 +55,10 @@ install_test_deps:
 	pip install -r $(src_directory_root)/requirements-testing.txt
 
 test_live_integration: install_test_deps
-	pytest -rP $(integration_test_directory_root)
+	APPLICATION_KEY=$(application_key) pytest -rP $(integration_test_directory_root)
 
 test_unit: install_test_deps
-	pytest -rP $(src_directory_root)
+	APPLICATION_KEY=$(application_key) pytest -rP $(src_directory_root)
 
 dev_health_check:
 	curl -f https://$(application_key).aws.qa.acmuiuc.org/api/v1/healthz
