@@ -1,26 +1,22 @@
+/* eslint import/no-nodejs-modules: ["error", {"allow": ["crypto"]}] */
 import { randomUUID } from "crypto";
 import fastify from "fastify";
 
 const now = () => Date.now();
-declare module 'fastify' {
-  interface FastifyRequest {
-    startTime: number;
-  }
-};
 
 function init() {
   const app = fastify({
     logger: true,
     disableRequestLogging: true,
     genReqId: (request) => {
-      const header = request.headers['x-apigateway-event'];
+      const header = request.headers["x-apigateway-event"];
       if (!header) {
         return randomUUID().toString();
       }
       const typeCheckedHeader = Array.isArray(header) ? header[0] : header;
-      const event = JSON.parse(decodeURIComponent(typeCheckedHeader))
-      return event["requestContext"]['requestId'];
-    }
+      const event = JSON.parse(decodeURIComponent(typeCheckedHeader));
+      return event.requestContext.requestId;
+    },
   });
   app.addHook("onRequest", (req, _, done) => {
     req.startTime = now();
@@ -35,7 +31,7 @@ function init() {
         statusCode: reply.raw.statusCode,
         durationMs: now() - req.startTime,
       },
-      "request completed"
+      "request completed",
     );
     done();
   });
@@ -46,6 +42,7 @@ function init() {
 if (import.meta.url === `file://${process.argv[1]}`) {
   // local development
   init().listen({ port: 3000 }, (err) => {
+    /* eslint no-console: ["error", {"allow": ["log", "error"]}] */
     if (err) console.error(err);
     console.log("Server listening on 3000");
   });
