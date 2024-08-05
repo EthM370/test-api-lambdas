@@ -41,6 +41,7 @@ check_account_dev:
 
 clean:
 	rm -rf .aws-sam
+	rm -rf node_modules/
 	rm -rf src/dist/
 	rm -rf src/build/
 
