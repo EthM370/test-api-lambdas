@@ -24,6 +24,8 @@ common_params = --no-confirm-changeset \
 				--s3-prefix $(application_key) \
 				--resolve-s3
 
+.PHONY: build clean
+
 check_account_prod:
 	@aws_account_id=$$(aws sts get-caller-identity --query Account --output text); \
 	if [ "$$aws_account_id" != "$(prod_aws_account)" ]; then \
@@ -42,7 +44,7 @@ clean:
 	rm -rf src/dist/
 	rm -rf src/build/
 
-build:
+build: src/ cloudformation/ docs/
 	yarn -D
 	yarn build:lambda
 	sam build --template-file cloudformation/main.yml

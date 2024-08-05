@@ -131,4 +131,5 @@ dist
 
 # AWS SAM
 .aws-sam/
-src/build/
+build/
+dist/
