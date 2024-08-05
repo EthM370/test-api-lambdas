@@ -43,7 +43,7 @@ function init() {
   return app;
 }
 
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   // local development
   init().listen({ port: 3000 }, (err) => {
     if (err) console.error(err);
