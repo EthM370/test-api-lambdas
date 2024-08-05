@@ -17,11 +17,6 @@ Parameters:
   ApplicationFriendlyName:
     Type: String
     Description: Application friendly name that will be used in resource descriptions
-  AuthLambdaFunctionName:
-    Type: String
-    Description: Set this parameter to something other than 'undefined' to enable authorizer lambda
-    AllowedPattern: ^[a-zA-Z0-9]+[a-zA-Z0-9-]+[a-zA-Z0-9]+$
-    Default: "undefined"
   VpcRequired:
     Description: Set to true if the default lambda should be attached to a VPC and a NoVPC version of the lambda should be created. Lambdas to be attached to VPCs to access Postgres.
     Default: false
@@ -30,8 +25,6 @@ Parameters:
 
 Conditions:
   IsProd: !Equals [!Ref RunEnvironment, 'prod']
-  AuthorizerFunctionEnabled: !Not [!Equals [!Ref AuthLambdaFunctionName, "undefined"]]
-  # NotAuthorizerFunctionEnabled: !Equals [!Ref AuthLambdaFunctionName, "undefined"]
   ShouldAttachVpc:
     !Equals [true, !Ref VpcRequired]
 
@@ -78,7 +71,6 @@ Resources:
       Parameters:
         RunEnvironment: !Ref RunEnvironment
         LambdaFunctionName: !Sub ${ApplicationPrefix}-lambda
-        AuthLambdaFunctionName: !Sub ${ApplicationPrefix}-auth-lambda
 
   AppLogGroups:
     Type: AWS::Serverless::Application
@@ -86,28 +78,7 @@ Resources:
       Location: ./logs.yml
       Parameters:
         LambdaFunctionName: !Sub ${ApplicationPrefix}-lambda
-        AuthLambdaFunctionName: !Sub ${ApplicationPrefix}-auth-lambda
         LogRetentionDays: !FindInMap [General, !Ref RunEnvironment, LogRetentionDays]
-
-  # AppAuthLambdaFunction:
-  #   Condition: AuthorizerFunctionEnabled
-  #   Type: AWS::Serverless::Function'
-  #   DependsOn:
-  #     - AppLogGroups
-  #   Properties:
-  #     CodeUri: ../src/authorizers/
-  #     AutoPublishAlias: live
-  #     Runtime: python3.11
-  #     Description: !Sub ${ApplicationFriendlyName} Authorizer Lambda
-  #     FunctionName:  ${ApplicationPrefix}-auth-lambda
-  #     Handler: combined.lambda_handler
-  #     MemorySize: 768
-  #     Role: !GetAtt AppSecurityRoles.Outputs.AuthFunctionRoleArn
-  #     Timeout: 30
-  #     Environment:
-  #       Variables:
-  #         RunEnvironment: !Ref RunEnvironment
-  #         AadValidClientId: !If [AuthorizerFunctionEnabled, !FindInMap [ApiGwConfig, !Ref RunEnvironment, AadValidClientId], !Ref AWS::NoValue]
 
   AppApiLambdaFunction:
     Type: AWS::Serverless::Function
@@ -238,15 +209,6 @@ Resources:
       Dimensions:
         - Name: 'ApiName'
           Value: !Sub ${ApplicationPrefix}-gateway
-
-  # LambdaAuthorizerPermission:
-  #   Condition: AuthorizerFunctionEnabled
-  #   Type: AWS::Lambda::Permission
-  #   Properties:
-  #     Action: lambda:InvokeFunction
-  #     FunctionName: !GetAtt AppAuthLambdaFunction.Arn
-  #     Principal: apigateway.amazonaws.com
-  #     SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${AppApiGateway}/authorizers/*"
 
   APILambdaPermission:
     Type: AWS::Lambda::Permission
