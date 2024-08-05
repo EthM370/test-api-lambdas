@@ -1,7 +1,7 @@
 /* eslint-disable */
 
 import awsLambdaFastify from "@fastify/aws-lambda";
-import init from "./index.js";
+import init from ".";
 
 const app = init();
 const handler = awsLambdaFastify(app, {decorateRequest: false, serializeLambdaArguments: true});
