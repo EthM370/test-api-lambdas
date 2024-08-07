@@ -6,22 +6,14 @@ import {
   SecretsManagerClient,
   GetSecretValueCommand,
 } from "@aws-sdk/client-secrets-manager";
-import { AppRoles, RunEnvironment } from "../roles.js";
+import { AppRoles } from "../roles.js";
 import {
   BaseError,
   InternalServerError,
   UnauthenticatedError,
   UnauthorizedError,
 } from "../errors/index.js";
-
-const CONFIG_SECRET_NAME = "infra-sample-api-config" as const; // TODO: CHANGE ME
-const GroupRoleMapping: Record<RunEnvironment, Record<string, AppRoles[]>> = {
-  prod: { "48591dbc-cdcb-4544-9f63-e6b92b067e33": [AppRoles.MANAGER] }, // Infra Chairs
-  dev: {
-    "48591dbc-cdcb-4544-9f63-e6b92b067e33": [AppRoles.MANAGER], // Infra Chairs
-    "0": [AppRoles.MANAGER], // Dummy Group for development only
-  },
-};
+import { genericConfig } from "../config.js";
 
 function intersection<T>(setA: Set<T>, setB: Set<T>): Set<T> {
   const _intersection = new Set<T>();
@@ -44,7 +36,7 @@ export type AadToken = {
   amr: string[];
   appid: string;
   appidacr: string;
-  email: string;
+  email?: string;
   groups?: string[];
   idp: string;
   ipaddr: string;
@@ -57,6 +49,7 @@ export type AadToken = {
   unique_name: string;
   uti: string;
   ver: string;
+  roles?: string[];
 };
 const smClient = new SecretsManagerClient({
   region: process.env.AWS_REGION || "us-east-1",
@@ -117,8 +110,11 @@ const authPlugin: FastifyPluginAsync = async (fastify, _options) => {
           }
           signingKey =
             process.env.JwtSigningKey ||
-            (((await getSecretValue(CONFIG_SECRET_NAME)) || { jwt_key: "" })
-              .jwt_key as string) ||
+            ((
+              (await getSecretValue(genericConfig.ConfigSecretName)) || {
+                jwt_key: "",
+              }
+            ).jwt_key as string) ||
             "";
           if (signingKey === "") {
             throw new UnauthenticatedError({
@@ -160,24 +156,41 @@ const authPlugin: FastifyPluginAsync = async (fastify, _options) => {
           verifyOptions,
         ) as AadToken;
         request.tokenPayload = verifiedTokenData;
-        request.username = verifiedTokenData.email;
+        request.username = verifiedTokenData.email || verifiedTokenData.sub;
         const userRoles = new Set([] as AppRoles[]);
         const expectedRoles = new Set(validRoles);
-        if (verifiedTokenData.groups) {
+        if (
+          verifiedTokenData.groups &&
+          fastify.environmentConfig.GroupRoleMapping
+        ) {
           for (const group of verifiedTokenData.groups) {
-            if (!GroupRoleMapping[fastify.runEnvironment][group]) {
-              continue;
-            }
-            for (const role of GroupRoleMapping[fastify.runEnvironment][
-              group
-            ]) {
-              userRoles.add(role);
+            if (fastify.environmentConfig["GroupRoleMapping"][group]) {
+              for (const role of fastify.environmentConfig["GroupRoleMapping"][
+                group
+              ]) {
+                userRoles.add(role);
+              }
             }
           }
         } else {
-          throw new UnauthenticatedError({
-            message: "Could not find groups in token.",
-          });
+          if (
+            verifiedTokenData.roles &&
+            fastify.environmentConfig.AzureRoleMapping
+          ) {
+            for (const group of verifiedTokenData.roles) {
+              if (fastify.environmentConfig["AzureRoleMapping"][group]) {
+                for (const role of fastify.environmentConfig[
+                  "AzureRoleMapping"
+                ][group]) {
+                  userRoles.add(role);
+                }
+              }
+            }
+          } else {
+            throw new UnauthenticatedError({
+              message: "Could not find groups or roles in token.",
+            });
+          }
         }
         if (intersection(userRoles, expectedRoles).size === 0) {
           throw new UnauthorizedError({

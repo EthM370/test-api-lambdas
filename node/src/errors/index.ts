@@ -70,3 +70,36 @@ export class NotFoundError extends BaseError<"NotFoundError"> {
     });
   }
 }
+
+export class ValidationError extends BaseError<"ValidationError"> {
+  constructor({ message }: { message: string }) {
+    super({
+      name: "ValidationError",
+      id: 104,
+      message,
+      httpStatusCode: 400,
+    });
+  }
+}
+
+export class DatabaseInsertError extends BaseError<"DatabaseInsertError"> {
+  constructor({ message }: { message: string }) {
+    super({
+      name: "DatabaseInsertError",
+      id: 105,
+      message,
+      httpStatusCode: 500,
+    });
+  }
+}
+
+export class DatabaseFetchError extends BaseError<"DatabaseFetchError"> {
+  constructor({ message }: { message: string }) {
+    super({
+      name: "DatabaseFetchError",
+      id: 106,
+      message,
+      httpStatusCode: 500,
+    });
+  }
+}

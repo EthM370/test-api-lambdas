@@ -7,6 +7,9 @@ import protectedRoute from "./routes/protected.js";
 import errorHandlerPlugin from "./plugins/errorHandler.js";
 import { RunEnvironment, runEnvironments } from "./roles.js";
 import { InternalServerError } from "./errors/index.js";
+import cors from "@fastify/cors";
+import fastifyZodValidationPlugin from "./plugins/validate.js";
+import { environmentConfig } from "./config.js";
 
 const now = () => Date.now();
 
@@ -25,6 +28,7 @@ async function init() {
     },
   });
   await app.register(fastifyAuthPlugin);
+  await app.register(fastifyZodValidationPlugin);
   await app.register(FastifyAuthProvider);
   await app.register(errorHandlerPlugin);
   if (!process.env.RunEnvironment) {
@@ -36,6 +40,7 @@ async function init() {
     });
   }
   app.runEnvironment = process.env.RunEnvironment as RunEnvironment;
+  app.environmentConfig = environmentConfig[app.runEnvironment];
   app.addHook("onRequest", (req, _, done) => {
     req.startTime = now();
     req.log.info({ url: req.raw.url }, "received request");
@@ -60,16 +65,20 @@ async function init() {
     },
     { prefix: "/api/v1" },
   );
+  await app.register(cors, {
+    origin: environmentConfig[app.runEnvironment].ValidCorsOrigins,
+  });
+
   return app;
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   // local development
   const app = await init();
-  app.listen({ port: 3000 }, (err) => {
+  app.listen({ port: 8080 }, (err) => {
     /* eslint no-console: ["error", {"allow": ["log", "error"]}] */
     if (err) console.error(err);
-    console.log("Server listening on 3000");
+    console.log("Server listening on 8080");
   });
 }
 export default init;
