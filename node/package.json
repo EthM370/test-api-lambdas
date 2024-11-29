@@ -34,7 +34,9 @@
     "typescript": "^5.5.4"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.693.0",
     "@aws-sdk/client-secrets-manager": "^3.624.0",
+    "@aws-sdk/util-dynamodb": "^3.693.0",
     "@fastify/auth": "^4.6.1",
     "@fastify/aws-lambda": "^4.1.0",
     "@fastify/cors": "^9.0.1",
@@ -44,5 +46,6 @@
     "jwks-rsa": "^3.1.0",
     "zod": "^3.23.8",
     "zod-validation-error": "^3.3.1"
-  }
+  },
+  "packageManager": "yarn@1.22.22+sha1.ac34549e6aa8e7ead463a7407e1c7390f61a6610"
 }

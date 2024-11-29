@@ -11,16 +11,33 @@ export type ConfigType = {
 };
 
 type GenericConfigType = {
+  DynamoTableName: string;
   ConfigSecretName: string;
+  AwsRegion: string;
 };
 
 type EnvironmentConfigType = {
   [env in RunEnvironment]: ConfigType;
 };
 
+
 const genericConfig: GenericConfigType = {
+  DynamoTableName: "infra-events-ticketing-metadata",
   ConfigSecretName: "invalid-secret",
+  AwsRegion: "us-east-1",
+}
+
+const ticketeventConfig: GenericConfigType = {
+  DynamoTableName: "infra-events-ticketing-metadata",
+  ConfigSecretName: "invalid-secret",
+  AwsRegion: "us-east-1",
 } as const; // CHANGE ME to config secret
+
+const mercheventConfig: GenericConfigType = {
+  DynamoTableName: "infra-merchstore-metadata",
+  ConfigSecretName: "invalid-secret",
+  AwsRegion: "us-east-1",
+} as const;
 
 const environmentConfig: EnvironmentConfigType = {
   dev: {
@@ -43,4 +60,4 @@ const environmentConfig: EnvironmentConfigType = {
   },
 } as const;
 
-export { genericConfig, environmentConfig };
+export { genericConfig, ticketeventConfig, mercheventConfig, environmentConfig };

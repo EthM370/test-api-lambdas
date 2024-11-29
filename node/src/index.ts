@@ -10,6 +10,7 @@ import { InternalServerError } from "./errors/index.js";
 import cors from "@fastify/cors";
 import fastifyZodValidationPlugin from "./plugins/validate.js";
 import { environmentConfig } from "./config.js";
+import paideventRoute from "./routes/paidevent.js";
 
 const now = () => Date.now();
 
@@ -62,6 +63,7 @@ async function init() {
   await app.register(
     async (api, _options) => {
       api.register(protectedRoute, { prefix: "/protected" });
+      api.register(paideventRoute, { prefix: "/paidevent"});
     },
     { prefix: "/api/v1" },
   );
